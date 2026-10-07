@@ -17,7 +17,7 @@ data class Revision(val value: Long = 0) {
 
 /** A detached, deterministic snapshot. Collection properties must be treated as read-only. */
 class SyncEntity(val id: EntityId, fields: Map<String, String>, val revision: Revision = Revision()) {
-    val fields: Map<String, String> = fields.entries.sortedBy { it.key }.associate { it.toPair() }
+    val fields: Map<String, String> = SnapshotMap(fields.entries.sortedBy { it.key }.associate { it.toPair() })
     init { require(fields.keys.all { it.isNotBlank() }) { "Field names must not be blank" } }
     fun edited(newFields: Map<String, String>): SyncEntity =
         if (newFields == fields) this else SyncEntity(id, newFields, revision.next())
@@ -32,7 +32,7 @@ class SyncState(entities: Collection<SyncEntity> = emptyList()) {
     val entities: Map<EntityId, SyncEntity>
     init {
         require(entities.map { it.id }.toSet().size == entities.size) { "Duplicate entity id" }
-        this.entities = entities.sortedBy { it.id }.associateBy { it.id }
+        this.entities = SnapshotMap(entities.sortedBy { it.id }.associateBy { it.id })
     }
     operator fun get(id: EntityId): SyncEntity? = entities[id]
     override fun equals(other: Any?): Boolean = other is SyncState && entities == other.entities

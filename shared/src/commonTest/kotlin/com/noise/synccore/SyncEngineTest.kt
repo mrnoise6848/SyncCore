@@ -151,6 +151,16 @@ class SyncEngineTest {
         assertEquals(listOf("a","z"), entity.fields.keys.toList())
         assertEquals("first",snapshot[a.id]?.fields?.get("a"))
     }
+    @Test fun mutatedViewsCannotChangeSnapshots() {
+        assertFails { (a.fields as MutableMap<String,String>)["title"] = "injected" }
+        val fieldsView = a.fields.entries.toMutableSet()
+        fieldsView.clear()
+        val snapshot = state(a)
+        val entitiesView = snapshot.entities.values.toMutableList()
+        entitiesView.clear()
+        assertEquals("Meeting",a.fields["title"])
+        assertEquals(a,snapshot[a.id])
+    }
     @Test fun invalidDomainValuesAreRejected() {
         assertFailsWith<IllegalArgumentException> { EntityId(" ") }
         assertFailsWith<IllegalArgumentException> { Revision(-1) }

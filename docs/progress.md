@@ -25,3 +25,4 @@ The phase order follows `SyncCore.md`. Tests and benchmarks are not executed unt
 | 19 | Android/iOS engine entry checks, native baseline adapters and device integration tests | Implementation complete; platform execution deferred |
 | 20 | Sync model, detection, conflicts, policies, KMP, performance and seven design decisions | Complete |
 | 21 | Technical showcase README, usage, scope, limitations and evidence links | Complete |
+| 22 | Final static safety/API/serialization/platform review and evidence-generation harnesses | Complete |

@@ -66,7 +66,9 @@ object SyncCodec {
     fun encodeChanges(value: ChangeSet): String = encode("changes", value.dto())
     fun decodeChanges(text: String): ChangeSet = decode<ChangesDto>("changes", text).model()
     fun encodeConflicts(value: List<Conflict>): String = encode("conflicts", value.sortedBy { it.id }.map { it.dto() })
-    fun decodeConflicts(text: String): List<Conflict> = decode<List<ConflictDto>>("conflicts", text).map { it.model() }.sortedBy { it.id }
+    fun decodeConflicts(text: String): List<Conflict> = decode<List<ConflictDto>>("conflicts", text).map { it.model() }.sortedBy { it.id }.also {
+        require(it.map { c -> c.id }.distinct().size == it.size) { "Duplicate conflict" }
+    }
     fun encodePlan(value: SyncPlan): String = encode("plan", value.dto())
     fun decodePlan(text: String): SyncPlan = decode<PlanDto>("plan", text).model().also {
         require(it == SyncPlanner().plan(it.inputs, it.choices)) { "Non-canonical or unsafe plan" }
@@ -74,7 +76,16 @@ object SyncCodec {
     fun encodeResult(value: SyncResult): String = encode("result", ResultDto(value.local.dto(), value.remote.dto(), value.baseline.dto(), value.unresolved.map { it.dto() }, value.appliedOperations))
     fun decodeResult(text: String): SyncResult = decode<ResultDto>("result", text).let {
         require(it.appliedOperations >= 0) { "Invalid operation count" }
-        SyncResult(it.local.model(), it.remote.model(), it.baseline.model(), it.unresolved.map { c -> c.model() }, it.appliedOperations)
+        val result = SyncResult(it.local.model(), it.remote.model(), it.baseline.model(), it.unresolved.map { c -> c.model() }, it.appliedOperations)
+        val byId = result.unresolved.associateBy { c -> c.id }
+        require(byId.size == result.unresolved.size) { "Duplicate unresolved conflict" }
+        for (id in (result.local.entities.keys + result.remote.entities.keys + result.baseline.entities.keys)) {
+            val conflict = byId[id]
+            if (conflict == null) require(result.local[id] == result.remote[id] && result.local[id] == result.baseline[id]) { "Unexplained result divergence" }
+            else require(conflict.change.local == result.local[id] && conflict.change.remote == result.remote[id] && conflict.change.base == result.baseline[id]) { "Unresolved snapshot mismatch" }
+        }
+        require(byId.keys.all { id -> result.local[id] != result.remote[id] }) { "Conflict missing from result" }
+        result
     }
     fun encodeReplay(value: ReplayRecord): String = encode("replay", ReplayDto(value.inputs.dto(), value.choices.dto()))
     fun decodeReplay(text: String): ReplayRecord = decode<ReplayDto>("replay", text).let { ReplayRecord(it.inputs.model(), it.choices.model()) }

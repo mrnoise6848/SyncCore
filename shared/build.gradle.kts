@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.gradle.api.tasks.testing.Test
 
 plugins {
     alias(libs.plugins.kotlinSerialization)
@@ -67,4 +68,9 @@ kotlin {
 
 dependencies {
     androidRuntimeClasspath(libs.compose.uiTooling)
+}
+
+
+tasks.withType<Test>().configureEach {
+    systemProperty("synccore.reportDir", rootProject.layout.projectDirectory.dir("docs").asFile.absolutePath)
 }
