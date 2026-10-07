@@ -6,3 +6,4 @@ The phase order follows `SyncCore.md`. Tests and benchmarks are not executed unt
 | --- | --- | --- |
 | 1 | Existing project inspection and architecture | Complete |
 | 2 | Detached entity snapshots, stable IDs, revisions and three input states | Complete |
+| 3 | Deterministic three-way detector including absence/deletion | Complete |
