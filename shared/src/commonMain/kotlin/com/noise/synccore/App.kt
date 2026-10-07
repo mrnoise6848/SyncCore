@@ -26,7 +26,7 @@ fun App() {
         var scenarioIndex by remember { mutableStateOf(0) }
         var defaultPolicy by remember { mutableStateOf<ResolutionPolicy?>(null) }
         var overrides by remember { mutableStateOf<Map<EntityId, ResolutionPolicy>>(emptyMap()) }
-        val scenario = DemoScenarios.all[scenarioIndex]
+        val scenario = ScenarioCatalog.all[scenarioIndex]
         val choices = remember(defaultPolicy, overrides) { ResolutionChoices(defaultPolicy, overrides) }
         val run = remember(scenario, choices) { SyncSimulator().run(scenario, choices) }
         LaunchedEffect(run) { replayStatus = null }
@@ -39,7 +39,7 @@ fun App() {
             Text("Divergence, made explicit.", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onBackground)
             Text("Base + Local + Remote → Changes → Conflicts → Plan", color = MaterialTheme.colorScheme.onSurfaceVariant)
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                DemoScenarios.all.forEachIndexed { index, item ->
+                ScenarioCatalog.all.forEachIndexed { index, item ->
                     FilterChip(selected = index == scenarioIndex, onClick = {
                         scenarioIndex = index; defaultPolicy = null; overrides = emptyMap()
                     }, label = { Text(item.name) })
