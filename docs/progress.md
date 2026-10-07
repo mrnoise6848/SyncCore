@@ -19,3 +19,4 @@ The phase order follows `SyncCore.md`. Tests and benchmarks are not executed unt
 | 13 | Serialized baseline repository, optimistic publication and storage adapter boundary | Complete |
 | 14 | Canonical plan validation, strict decoded changes/conflicts and destructive-operation guards | Complete |
 | 15 | Logical revision editing, no-op preservation, overflow checks and clock-free semantics | Complete |
+| 16 | Portable staged benchmark harness and fixed 100–100k mixed datasets | Complete; execution deferred |
