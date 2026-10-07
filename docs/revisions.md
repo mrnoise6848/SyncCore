@@ -1,0 +1,5 @@
+# Revision semantics
+
+Revisions are non-negative caller-supplied logical counters. Entity equality includes identity, the exact field map and revision. A revision-only change is therefore a state change. A branch uses `entity.edited(fields)` to increment its revision only when content actually differs; `Revision.next()` rejects Long overflow. Importers may explicitly construct revisions; the engine does not invent history or enforce monotonicity across independent branches.
+
+Two independently edited branches may have the same counter and different content. A greater counter on one branch does not imply authority over the other. Compare each entire entity to its base, never compare revision magnitude to choose a winner. Matching concurrent snapshots safely converge; divergent snapshots require an explicit policy even when their counters differ. There is no last-write-wins policy, wall clock, hash-based identity, or rename inference. A `title` change is a field change; changing an entity id is removal plus addition. KEEP_BOTH preserves revisions and chooses a new deterministic identity for the remote copy.

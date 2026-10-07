@@ -9,12 +9,18 @@ data class EntityId(val value: String) : Comparable<EntityId> {
 /** Caller-supplied logical revision, never a wall-clock timestamp. */
 data class Revision(val value: Long = 0) {
     init { require(value >= 0) { "Revision must be non-negative" } }
+    fun next(): Revision {
+        check(value < Long.MAX_VALUE) { "Revision exhausted" }
+        return Revision(value + 1)
+    }
 }
 
 /** A detached, deterministic snapshot. Collection properties must be treated as read-only. */
 class SyncEntity(val id: EntityId, fields: Map<String, String>, val revision: Revision = Revision()) {
     val fields: Map<String, String> = fields.entries.sortedBy { it.key }.associate { it.toPair() }
     init { require(fields.keys.all { it.isNotBlank() }) { "Field names must not be blank" } }
+    fun edited(newFields: Map<String, String>): SyncEntity =
+        if (newFields == fields) this else SyncEntity(id, newFields, revision.next())
     fun withId(newId: EntityId): SyncEntity = SyncEntity(newId, fields, revision)
     override fun equals(other: Any?): Boolean = other is SyncEntity &&
         id == other.id && fields == other.fields && revision == other.revision

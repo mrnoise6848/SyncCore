@@ -18,3 +18,4 @@ The phase order follows `SyncCore.md`. Tests and benchmarks are not executed unt
 | 12 | Versioned JSON codecs using compatible Apache-2.0 kotlinx.serialization | Complete |
 | 13 | Serialized baseline repository, optimistic publication and storage adapter boundary | Complete |
 | 14 | Canonical plan validation, strict decoded changes/conflicts and destructive-operation guards | Complete |
+| 15 | Logical revision editing, no-op preservation, overflow checks and clock-free semantics | Complete |
