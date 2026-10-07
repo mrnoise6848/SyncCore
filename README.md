@@ -1,31 +1,66 @@
-This is a Kotlin Multiplatform project targeting Android, iOS.
+# SyncCore
 
-* [/iosApp](./iosApp/iosApp) contains an iOS application. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+A deterministic Kotlin Multiplatform synchronization engine with a small Android/iOS conflict lab.
 
-* [/shared](./shared/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./shared/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./shared/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./shared/src/jvmMain/kotlin)
-    folder is the appropriate location.
+Offline replicas eventually diverge. When both sides change, synchronization must detect the conflict instead of silently overwriting one branch. SyncCore compares both snapshots to their last accepted base, creates an explicit plan, and applies it to detached in-memory states with stale-input and plan-integrity checks.
 
-### Running the apps
+```text
+Base + Local + Remote
+          ↓
+ChangeSet → Conflicts → Explicit choices → SyncPlan
+                                             ↓
+                                Guarded result + next baseline
+```
 
-Use the run configurations provided by the run widget in your IDE's toolbar. You can also use these commands and options:
+```kotlin
+val scenario = DemoScenarios.all.first()
+// Base: Meeting, Local: Important Meeting, Remote: Team Meeting
+val unresolved = SyncSimulator().run(scenario)
+// CONFLICT; both branches preserved
+val resolved = SyncSimulator().run(scenario, ResolutionChoices(ResolutionPolicy.KEEP_BOTH))
+// Both replicas now contain Important Meeting + Team Meeting under distinct stable IDs
+```
 
-- Android app: `./gradlew :androidApp:assembleDebug`
-- iOS app: open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+The classes above are in `com.noise.synccore.simulator` and `com.noise.synccore.domain.policy`.
 
-### Running tests
+## Features
 
-Use the run button in your IDE's editor gutter, or run tests using Gradle tasks:
+- Pure shared three-way detection with explicit additions, modifications and deletions.
+- Field, entity and delete/modify conflicts retaining original snapshots.
+- KEEP_LOCAL, KEEP_REMOTE, KEEP_BOTH and SKIP, globally or per conflict.
+- Ordered operations with preconditions, replacement payloads and collision-safe copies.
+- Atomic in-memory application, canonical plan validation and optimistic baseline publication.
+- Logical revisions, deterministic replay and versioned JSON round-trips.
+- Shared responsive Compose lab with 15 real scenarios and per-conflict choices.
+- Portable benchmark harness for 100, 1,000, 10,000 and 100,000 identities.
 
-- Android tests: `./gradlew :shared:testAndroidHostTest`
-- iOS tests: `./gradlew :shared:iosSimulatorArm64Test`
+## Architecture and platforms
 
----
+`shared/commonMain` contains the engine, simulator, JSON codec, repository interfaces and visualization. Android/iOS source sets contain native baseline storage and host entry points. `androidApp` is the Android host; `iosApp` embeds the shared controller in SwiftUI. Gradle **9.8.0**, AGP **9.4.1**, Kotlin **2.4.20** and the existing platform configuration are preserved.
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+See [architecture](docs/architecture.md), [sync model](docs/sync-model.md), [detection](docs/change-detection.md), [conflicts](docs/conflicts.md), [policies](docs/resolution-policies.md), [safety](docs/safety.md), [revisions](docs/revisions.md), [serialization](docs/serialization.md), [KMP](docs/kmp.md), [decisions](docs/decisions) and [scenario catalog](docs/scenarios.md).
+
+## Run and verify
+
+```sh
+./gradlew :androidApp:assembleDebug
+./gradlew :shared:testAndroidHostTest
+./gradlew :shared:iosSimulatorArm64Test :shared:linkDebugFrameworkIosArm64
+./gradlew :shared:connectedAndroidDeviceTest # attached Android target required
+```
+
+Open `iosApp/iosApp.xcodeproj` in Xcode to run the iOS host. The lab displays all three inputs, branch counts, conflicts, explicit policies, ordered operations, replica results and accepted baseline. Its replay button actually reruns the shared engine.
+
+Tests cover 75 catalog/policy combinations, 320 snapshot/policy combinations and focused safety/storage cases. The specification requires tests to run only after phase 22. Actual results are tracked in [evaluation](docs/evaluation.md); implementation phases and commits in [progress](docs/progress.md).
+
+## Benchmarks
+
+[Methodology](docs/performance.md) and [measured report](docs/benchmark-report.md). Timings are generated by real runs. Planning includes the full detection/resolution pipeline; guarded application includes canonical replanning. Portable peak-memory/allocation metrics are not claimed.
+
+## Limitations
+
+This is a synchronization engine showcase, not a cloud service or file manager. It plans and applies snapshots in memory; real transport transactions, retries, tombstones, multi-peer causality, text merging, rename inference and authenticated protocols are outside scope. Revisions do not establish cross-branch authority. Platform baseline adapters promise in-process publication, not cross-process transactions. JSON is a bounded local replay format.
+
+## External library
+
+Added kotlinx.serialization JSON **1.11.0**, Apache-2.0, with the compiler plugin at the existing Kotlin version. No external synchronization implementation was copied. Existing Compose/AndroidX dependencies remain in use.

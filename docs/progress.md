@@ -24,3 +24,4 @@ The phase order follows `SyncCore.md`. Tests and benchmarks are not executed unt
 | 18 | 15-scenario catalog, 75 policy combinations, 320-case exhaustive grid and focused safety tests | Complete; tests not executed |
 | 19 | Android/iOS engine entry checks, native baseline adapters and device integration tests | Implementation complete; platform execution deferred |
 | 20 | Sync model, detection, conflicts, policies, KMP, performance and seven design decisions | Complete |
+| 21 | Technical showcase README, usage, scope, limitations and evidence links | Complete |
