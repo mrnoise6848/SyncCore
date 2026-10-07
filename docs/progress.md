@@ -9,3 +9,4 @@ The phase order follows `SyncCore.md`. Tests and benchmarks are not executed unt
 | 3 | Deterministic three-way detector including absence/deletion | Complete |
 | 4 | Explicit changes and per-branch addition/modification/deletion counts | Complete |
 | 5 | Field/entity/delete-modify conflicts with both original values | Complete |
+| 6 | Explicit local/remote/both/skip choices and collision-safe remote copies | Complete |
