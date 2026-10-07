@@ -76,16 +76,18 @@ tasks.withType<Test>().configureEach {
     systemProperty("synccore.reportDir", rootProject.layout.projectDirectory.dir("docs").asFile.absolutePath)
 }
 
-// AGP registers host test tasks after project evaluation.
+// AGP registers host tests late and omits them during IDE model-only sync.
 afterEvaluate {
-    val androidHostTests = tasks.named<Test>("testAndroidHostTest")
-    androidHostTests.configure { exclude("**/EngineBenchmarkTest.class") }
-    tasks.register<Test>("benchmarkSyncCore") {
-        group = "verification"
-        description = "Measure the shared synchronization engine and write actual benchmark reports."
-        dependsOn(androidHostTests.map { it.testClassesDirs })
-        testClassesDirs = androidHostTests.get().testClassesDirs
-        classpath = androidHostTests.get().classpath
-        filter.includeTestsMatching("com.noise.synccore.EngineBenchmarkTest")
+    val androidHostTests = tasks.findByName("testAndroidHostTest") as? Test
+    if (androidHostTests != null) {
+        androidHostTests.exclude("**/EngineBenchmarkTest.class")
+        tasks.register<Test>("benchmarkSyncCore") {
+            group = "verification"
+            description = "Measure the shared synchronization engine and write actual benchmark reports."
+            dependsOn(androidHostTests.testClassesDirs)
+            testClassesDirs = androidHostTests.testClassesDirs
+            classpath = androidHostTests.classpath
+            filter.includeTestsMatching("com.noise.synccore.EngineBenchmarkTest")
+        }
     }
 }
