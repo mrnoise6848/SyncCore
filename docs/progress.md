@@ -16,3 +16,4 @@ The phase order follows `SyncCore.md`. Tests and benchmarks are not executed unt
 | 10 | Shared responsive Compose conflict lab and real plan/result visualization | Complete |
 | 11 | Captured inputs/choices, deterministic replay and equality check in the UI | Complete |
 | 12 | Versioned JSON codecs using compatible Apache-2.0 kotlinx.serialization | Complete |
+| 13 | Serialized baseline repository, optimistic publication and storage adapter boundary | Complete |
