@@ -1,0 +1,81 @@
+entities,stage,sample,elapsed_ns
+100,change detection,1,215750
+100,change detection,2,92625
+100,change detection,3,85417
+100,change detection,4,80083
+100,change detection,5,230709
+100,conflict detection,1,131291
+100,conflict detection,2,61959
+100,conflict detection,3,65542
+100,conflict detection,4,59708
+100,conflict detection,5,58417
+100,planning (full pipeline),1,349958
+100,planning (full pipeline),2,315708
+100,planning (full pipeline),3,313000
+100,planning (full pipeline),4,279542
+100,planning (full pipeline),5,713833
+100,guarded application,1,1217166
+100,guarded application,2,1234000
+100,guarded application,3,1108542
+100,guarded application,4,1116292
+100,guarded application,5,895750
+1000,change detection,1,505083
+1000,change detection,2,452084
+1000,change detection,3,545916
+1000,change detection,4,977667
+1000,change detection,5,1514542
+1000,conflict detection,1,636000
+1000,conflict detection,2,630875
+1000,conflict detection,3,593917
+1000,conflict detection,4,567709
+1000,conflict detection,5,580875
+1000,planning (full pipeline),1,1432792
+1000,planning (full pipeline),2,1644500
+1000,planning (full pipeline),3,1423583
+1000,planning (full pipeline),4,1409500
+1000,planning (full pipeline),5,2560875
+1000,guarded application,1,7302625
+1000,guarded application,2,3960167
+1000,guarded application,3,2965375
+1000,guarded application,4,3295625
+1000,guarded application,5,3850208
+10000,change detection,1,6243166
+10000,change detection,2,6718500
+10000,change detection,3,5713000
+10000,change detection,4,5583584
+10000,change detection,5,7518333
+10000,conflict detection,1,4465334
+10000,conflict detection,2,5595459
+10000,conflict detection,3,4112084
+10000,conflict detection,4,3448791
+10000,conflict detection,5,1959625
+10000,planning (full pipeline),1,23272667
+10000,planning (full pipeline),2,21956750
+10000,planning (full pipeline),3,16597459
+10000,planning (full pipeline),4,7993541
+10000,planning (full pipeline),5,12014459
+10000,guarded application,1,40504542
+10000,guarded application,2,28591292
+10000,guarded application,3,25183416
+10000,guarded application,4,35152000
+10000,guarded application,5,31812208
+100000,change detection,1,73663416
+100000,change detection,2,72931875
+100000,change detection,3,75407166
+100000,change detection,4,65349708
+100000,change detection,5,73908584
+100000,conflict detection,1,45568042
+100000,conflict detection,2,25161375
+100000,conflict detection,3,22480333
+100000,conflict detection,4,16167792
+100000,conflict detection,5,8884333
+100000,planning (full pipeline),1,138410958
+100000,planning (full pipeline),2,147308666
+100000,planning (full pipeline),3,149753459
+100000,planning (full pipeline),4,184819709
+100000,planning (full pipeline),5,197691167
+100000,guarded application,1,423623959
+100000,guarded application,2,396932333
+100000,guarded application,3,331440167
+100000,guarded application,4,347186292
+100000,guarded application,5,339307583

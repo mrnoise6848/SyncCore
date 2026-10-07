@@ -45,13 +45,14 @@ See [architecture](docs/architecture.md), [sync model](docs/sync-model.md), [det
 ```sh
 ./gradlew :androidApp:assembleDebug
 ./gradlew :shared:testAndroidHostTest
+./gradlew :shared:benchmarkSyncCore # actual timing report and raw samples
 ./gradlew :shared:iosSimulatorArm64Test :shared:linkDebugFrameworkIosArm64
 ./gradlew :shared:connectedAndroidDeviceTest # attached Android target required
 ```
 
 Open `iosApp/iosApp.xcodeproj` in Xcode to run the iOS host. The lab displays all three inputs, branch counts, conflicts, explicit policies, ordered operations, replica results and accepted baseline. Its replay button actually reruns the shared engine.
 
-Tests cover 75 catalog/policy combinations, 320 snapshot/policy combinations and focused safety/storage cases. The specification requires tests to run only after phase 22. Actual results are tracked in [evaluation](docs/evaluation.md); implementation phases and commits in [progress](docs/progress.md).
+Tests cover 75 catalog/policy combinations, 320 snapshot/policy combinations and focused safety/storage cases. The specification requires tests to run only after phase 22. Final verification: **35 host tests, 35 iOS simulator tests and 34 Android device tests passed**, plus the separate benchmark suite. **395 deterministic scenario/policy combinations passed**. Actual results are tracked in [evaluation](docs/evaluation.md); implementation phases and commits in [progress](docs/progress.md).
 
 ## Benchmarks
 
