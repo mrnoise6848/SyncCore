@@ -41,6 +41,9 @@ kotlin {
     }
     
     sourceSets {
+        androidDeviceTest.dependencies {
+            implementation(libs.androidx.testExt.junit)
+        }
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.compose.uiTooling)

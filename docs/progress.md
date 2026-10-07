@@ -22,3 +22,4 @@ The phase order follows `SyncCore.md`. Tests and benchmarks are not executed unt
 | 16 | Portable staged benchmark harness and fixed 100–100k mixed datasets | Complete; execution deferred |
 | 17 | Markdown report generator; actual values reserved for final verification | Implementation complete; measurements deferred |
 | 18 | 15-scenario catalog, 75 policy combinations, 320-case exhaustive grid and focused safety tests | Complete; tests not executed |
+| 19 | Android/iOS engine entry checks, native baseline adapters and device integration tests | Implementation complete; platform execution deferred |
