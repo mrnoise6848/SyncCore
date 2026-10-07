@@ -11,3 +11,4 @@ The phase order follows `SyncCore.md`. Tests and benchmarks are not executed unt
 | 5 | Field/entity/delete-modify conflicts with both original values | Complete |
 | 6 | Explicit local/remote/both/skip choices and collision-safe remote copies | Complete |
 | 7 | Ordered plans with concrete preconditions, payloads and conflict markers | Complete |
+| 8 | Atomic pure execution, stale-plan checks and per-entity baseline advancement | Complete |
