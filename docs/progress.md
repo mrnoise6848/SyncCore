@@ -5,3 +5,4 @@ The phase order follows `SyncCore.md`. Tests and benchmarks are not executed unt
 | Phase | Deliverable | Status |
 | --- | --- | --- |
 | 1 | Existing project inspection and architecture | Complete |
+| 2 | Detached entity snapshots, stable IDs, revisions and three input states | Complete |
