@@ -20,3 +20,4 @@ The phase order follows `SyncCore.md`. Tests and benchmarks are not executed unt
 | 14 | Canonical plan validation, strict decoded changes/conflicts and destructive-operation guards | Complete |
 | 15 | Logical revision editing, no-op preservation, overflow checks and clock-free semantics | Complete |
 | 16 | Portable staged benchmark harness and fixed 100–100k mixed datasets | Complete; execution deferred |
+| 17 | Markdown report generator; actual values reserved for final verification | Implementation complete; measurements deferred |
