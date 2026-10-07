@@ -22,12 +22,14 @@ private val syncColors = darkColorScheme(
 @Composable
 fun App() {
     MaterialTheme(colorScheme = syncColors) {
+        var replayStatus by remember { mutableStateOf<String?>(null) }
         var scenarioIndex by remember { mutableStateOf(0) }
         var defaultPolicy by remember { mutableStateOf<ResolutionPolicy?>(null) }
         var overrides by remember { mutableStateOf<Map<EntityId, ResolutionPolicy>>(emptyMap()) }
         val scenario = DemoScenarios.all[scenarioIndex]
         val choices = remember(defaultPolicy, overrides) { ResolutionChoices(defaultPolicy, overrides) }
         val run = remember(scenario, choices) { SyncSimulator().run(scenario, choices) }
+        LaunchedEffect(run) { replayStatus = null }
         Column(
             Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
                 .safeContentPadding().verticalScroll(rememberScrollState()).padding(20.dp),
@@ -74,6 +76,8 @@ fun App() {
             }
             Text(if (run.result.complete) "CONVERGED" else "AWAITING RESOLUTION", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.titleLarge)
             SnapshotGroup(listOf("RESULT / LOCAL" to run.result.local, "RESULT / REMOTE" to run.result.remote, "NEXT BASELINE" to run.result.baseline))
+            OutlinedButton(onClick = { replayStatus = if (DeterministicReplay.matches(run)) "Replay identical: plan and result match." else "Replay mismatch." }) { Text("Replay these inputs") }
+            replayStatus?.let { Text(it, color = MaterialTheme.colorScheme.onBackground) }
             Text("Pure shared engine · No network · No implicit overwrite", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         }
     }

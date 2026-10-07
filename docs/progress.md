@@ -14,3 +14,4 @@ The phase order follows `SyncCore.md`. Tests and benchmarks are not executed unt
 | 8 | Atomic pure execution, stale-plan checks and per-entity baseline advancement | Complete |
 | 9 | Deterministic simulator using the real planner and executor | Complete |
 | 10 | Shared responsive Compose conflict lab and real plan/result visualization | Complete |
+| 11 | Captured inputs/choices, deterministic replay and equality check in the UI | Complete |
