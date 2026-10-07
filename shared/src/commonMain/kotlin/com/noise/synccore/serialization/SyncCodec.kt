@@ -6,6 +6,9 @@ import com.noise.synccore.domain.model.*
 import com.noise.synccore.domain.policy.*
 import com.noise.synccore.domain.sync.*
 import com.noise.synccore.simulator.ReplayRecord
+import com.noise.synccore.engine.ChangeDetector
+import com.noise.synccore.engine.ConflictDetector
+import com.noise.synccore.engine.SyncPlanner
 import kotlinx.serialization.*
 import kotlinx.serialization.json.*
 
@@ -65,7 +68,9 @@ object SyncCodec {
     fun encodeConflicts(value: List<Conflict>): String = encode("conflicts", value.sortedBy { it.id }.map { it.dto() })
     fun decodeConflicts(text: String): List<Conflict> = decode<List<ConflictDto>>("conflicts", text).map { it.model() }.sortedBy { it.id }
     fun encodePlan(value: SyncPlan): String = encode("plan", value.dto())
-    fun decodePlan(text: String): SyncPlan = decode<PlanDto>("plan", text).model()
+    fun decodePlan(text: String): SyncPlan = decode<PlanDto>("plan", text).model().also {
+        require(it == SyncPlanner().plan(it.inputs, it.choices)) { "Non-canonical or unsafe plan" }
+    }
     fun encodeResult(value: SyncResult): String = encode("result", ResultDto(value.local.dto(), value.remote.dto(), value.baseline.dto(), value.unresolved.map { it.dto() }, value.appliedOperations))
     fun decodeResult(text: String): SyncResult = decode<ResultDto>("result", text).let {
         require(it.appliedOperations >= 0) { "Invalid operation count" }
@@ -98,12 +103,19 @@ object SyncCodec {
         val identity = EntityId(id)
         val b = base?.model(); val l = local?.model(); val r = remote?.model()
         require(listOfNotNull(b, l, r).isNotEmpty() && listOfNotNull(b, l, r).all { it.id == identity }) { "Invalid change identity" }
-        return Change(identity, b, l, r, ChangeStatus.valueOf(status))
+        val change = Change(identity, b, l, r, ChangeStatus.valueOf(status))
+        val input = SyncInputs(SyncState(listOfNotNull(b)), SyncState(listOfNotNull(l)), SyncState(listOfNotNull(r)))
+        require(ChangeDetector().detect(input).single() == change) { "Inconsistent change status" }
+        return change
     }
     private fun ChangeSet.dto() = ChangesDto(changes.map { it.dto() })
     private fun ChangesDto.model() = ChangeSet(changes.map { it.model() })
     private fun Conflict.dto() = ConflictDto(change.dto(), type.name, fields)
-    private fun ConflictDto.model() = Conflict(change.model(), ConflictType.valueOf(type), fields)
+    private fun ConflictDto.model(): Conflict {
+        val conflict = Conflict(change.model(), ConflictType.valueOf(type), fields)
+        require(ConflictDetector().detect(ChangeSet(listOf(conflict.change))).singleOrNull() == conflict) { "Inconsistent conflict" }
+        return conflict
+    }
     private fun SyncOperation.dto() = OperationDto(type.name, id.value, expected?.dto(), entity?.dto())
     private fun OperationDto.model() = SyncOperation(OperationType.valueOf(type), EntityId(id), expected?.model(), entity?.model())
     private fun SyncPlan.dto() = PlanDto(inputs.dto(), choices.dto(), changes.dto(), conflicts.map { it.dto() }, operations.map { it.dto() }, completedIds.map { it.value })

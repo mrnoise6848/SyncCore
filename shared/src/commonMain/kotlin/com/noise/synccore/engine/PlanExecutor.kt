@@ -3,12 +3,15 @@ package com.noise.synccore.engine
 import com.noise.synccore.domain.model.*
 import com.noise.synccore.domain.sync.*
 
+class InvalidPlanException : IllegalArgumentException("Plan differs from canonical engine output")
+
 class StalePlanException : IllegalStateException("Plan inputs differ from current snapshots; replan before applying")
 
 /** Pure, atomic in-memory application. A transport adapter must independently provide equivalent guards. */
 class PlanExecutor {
     fun apply(plan: SyncPlan, current: SyncInputs = plan.inputs): SyncResult {
         if (current != plan.inputs) throw StalePlanException()
+        if (SyncPlanner().plan(plan.inputs, plan.choices) != plan) throw InvalidPlanException()
         val mutations = plan.operations.filter { it.type.side != null }
         require(mutations.map { it.type.side to it.id }.distinct().size == mutations.size) { "Duplicate mutation" }
         for (operation in mutations) {
