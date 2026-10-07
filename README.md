@@ -1,67 +1,78 @@
 # SyncCore
 
-A deterministic Kotlin Multiplatform synchronization engine with a small Android/iOS conflict lab.
+**Make offline replica divergence explicit before either branch is overwritten.**
 
-Offline replicas eventually diverge. When both sides change, synchronization must detect the conflict instead of silently overwriting one branch. SyncCore compares both snapshots to their last accepted base, creates an explicit plan, and applies it to detached in-memory states with stale-input and plan-integrity checks.
+When two replicas change independently, choosing the newest-looking revision can silently discard a valid edit. SyncCore compares local and remote snapshots with their last accepted base, identifies additions, modifications, deletions and conflicts, then produces an inspectable plan with explicit resolution choices.
 
-```text
-Base + Local + Remote
-          ↓
-ChangeSet → Conflicts → Explicit choices → SyncPlan
-                                             ↓
-                                Guarded result + next baseline
-```
+The engine applies that plan to detached in-memory states after checking for stale inputs and recomputing the canonical plan. An Android/iOS lab exposes the inputs, conflicts, operations and resulting baseline so synchronization decisions can be examined and replayed.
+
+## A conflict you can inspect
+
+For one identity, Base contains **Meeting**, Local contains **Important Meeting**, and Remote contains **Team Meeting**. The default preserves both divergent branches as an unresolved conflict. `KEEP_BOTH` creates distinct stable identities and converges both replicas to both values.
 
 ```kotlin
 val scenario = DemoScenarios.all.first()
-// Base: Meeting, Local: Important Meeting, Remote: Team Meeting
 val unresolved = SyncSimulator().run(scenario)
-// CONFLICT; both branches preserved
-val resolved = SyncSimulator().run(scenario, ResolutionChoices(ResolutionPolicy.KEEP_BOTH))
-// Both replicas now contain Important Meeting + Team Meeting under distinct stable IDs
+val resolved = SyncSimulator().run(
+    scenario, ResolutionChoices(ResolutionPolicy.KEEP_BOTH)
+)
 ```
 
-The classes above are in `com.noise.synccore.simulator` and `com.noise.synccore.domain.policy`.
+Imports come from `com.noise.synccore.simulator` and `com.noise.synccore.domain.policy`.
 
-## Features
+<p align="center">
+  <img src="docs/verification/ios-lab.png" width="360" alt="Existing iOS simulator lab showing the same entity with different base, local and remote titles">
+</p>
 
-- Pure shared three-way detection with explicit additions, modifications and deletions.
-- Field, entity and delete/modify conflicts retaining original snapshots.
-- KEEP_LOCAL, KEEP_REMOTE, KEEP_BOTH and SKIP, globally or per conflict.
-- Ordered operations with preconditions, replacement payloads and collision-safe copies.
-- Atomic in-memory application, canonical plan validation and optimistic baseline publication.
-- Logical revisions, deterministic replay and versioned JSON round-trips.
-- Shared responsive Compose lab with 15 real scenarios and per-conflict choices.
-- Portable benchmark harness for 100, 1,000, 10,000 and 100,000 identities.
+*Existing iOS simulator capture of divergent inputs. The lab contains 15 scenarios and per-conflict choices; this image is a smoke-check capture, not exhaustive UI validation.*
 
-## Architecture and platforms
+## Planning and applying are separate decisions
 
-`shared/commonMain` contains the engine, simulator, JSON codec, repository interfaces and visualization. Android/iOS source sets contain native baseline storage and host entry points. `androidApp` is the Android host; `iosApp` embeds the shared controller in SwiftUI. Gradle **9.8.0**, AGP **9.4.1**, Kotlin **2.4.20** and the existing platform configuration are preserved.
+```text
+Base + Local + Remote
+    → three-way changes → field/entity/delete-modify conflicts
+    → explicit whole-entity policy → ordered operations with preconditions
+    → stale-input check + canonical replan
+    → detached replica results + baseline for converged identities
+```
 
-See [architecture](docs/architecture.md), [sync model](docs/sync-model.md), [detection](docs/change-detection.md), [conflicts](docs/conflicts.md), [policies](docs/resolution-policies.md), [safety](docs/safety.md), [revisions](docs/revisions.md), [serialization](docs/serialization.md), [KMP](docs/kmp.md), [decisions](docs/decisions) and [scenario catalog](docs/scenarios.md).
+`KEEP_LOCAL`, `KEEP_REMOTE`, `KEEP_BOTH` and `SKIP` can be selected globally or per conflict. Field differences are exposed, but resolution remains whole-entity selection rather than automatic text/field merging. Delete/modify conflicts require the same explicit decision as competing edits.
 
-## Run and verify
+The executor rejects changed inputs and plans that differ from canonical engine output before returning results. Baselines advance only for converged identities; skipped conflicts retain their earlier base. Native baseline repositories use compare-and-set publication within the process. See [planner](shared/src/commonMain/kotlin/com/noise/synccore/engine/SyncPlanner.kt), [executor](shared/src/commonMain/kotlin/com/noise/synccore/engine/PlanExecutor.kt), [safety](docs/safety.md) and [resolution policies](docs/resolution-policies.md).
+
+## Measured cost of the guards
+
+The existing JVM report includes two warmups and five timed samples per stage, excluding fixture generation:
+
+| Identities | Conflicts / operations | Full planning median | Guarded application median |
+|---:|---:|---:|---:|
+| 10,000 | 2,000 / 8,000 | 16.60 ms | 31.81 ms |
+| 100,000 | 20,000 / 80,000 | 149.75 ms | 347.19 ms |
+
+These are rounded values from the [measured report](docs/benchmark-report.md), on Temurin 21.0.8, macOS 26.4.1 ARM64, with 10 available processors. Planning includes detection and resolution; application includes canonical replanning. This makes the extra integrity cost visible instead of hiding it in a claim of “fast sync.”
+
+These in-process samples are subject to warmup, GC and system load; five-sample empirical p95 equals the maximum. They do not establish mobile throughput, network sync performance or peak memory. [Methodology](docs/performance.md) and [raw samples](docs/benchmark-samples.csv) support reproduction.
+
+## Shared decisions, platform hosts
+
+`shared/commonMain` contains the pure engine, simulator, JSON replay codec, repository interfaces and Compose lab. Android/iOS adapters supply baseline storage and host entry points. Domain decisions do not depend on network, current time or random values, enabling deterministic replay across platforms. See [architecture](docs/architecture.md), [KMP boundaries](docs/kmp.md) and [decisions](docs/decisions/).
+
+## Run and check
 
 ```sh
 ./gradlew :androidApp:assembleDebug
 ./gradlew :shared:testAndroidHostTest
-./gradlew :shared:benchmarkSyncCore # actual timing report and raw samples
+./gradlew :shared:benchmarkSyncCore
 ./gradlew :shared:iosSimulatorArm64Test :shared:linkDebugFrameworkIosArm64
-./gradlew :shared:connectedAndroidDeviceTest # attached Android target required
+./gradlew :shared:connectedAndroidDeviceTest
 ```
 
-Open `iosApp/iosApp.xcodeproj` in Xcode to run the iOS host. The lab displays all three inputs, branch counts, conflicts, explicit policies, ordered operations, replica results and accepted baseline. Its replay button actually reruns the shared engine.
+The last command requires an Android device. Open `iosApp/iosApp.xcodeproj` for the iOS host. In the lab, choose a conflict, compare policies, inspect operations and results, then replay.
 
-Tests cover 75 catalog/policy combinations, 320 snapshot/policy combinations and focused safety/storage cases. The specification requires tests to run only after phase 22. Final verification: **35 host tests, 35 iOS simulator tests and 34 Android device tests passed**, plus the separate benchmark suite. **395 deterministic scenario/policy combinations passed**. Actual results are tracked in [evaluation](docs/evaluation.md); implementation phases and commits in [progress](docs/progress.md).
+The existing [evaluation record](docs/evaluation.md) reports 35 host, 35 iOS simulator and 34 Android device tests passing, plus 395 deterministic scenario/policy combinations. Tests cover stale/tampered plans, collisions, deletion conflicts, replay, codecs and baseline publication. Those are historical verification results, not checks rerun during this README revision.
 
-## Benchmarks
+## Where the guarantees end
 
-[Methodology](docs/performance.md) and [measured report](docs/benchmark-report.md). Timings are generated by real runs. Planning includes the full detection/resolution pipeline; guarded application includes canonical replanning. Portable peak-memory/allocation metrics are not claimed.
+SyncCore is an in-memory engine and conflict lab. Real transport/filesystem transactions, retry protocols, tombstones, multi-peer causality, rename inference, text merge and authentication remain outside scope. Detached atomic application does not make writes to a server atomic. Revisions do not establish cross-branch authority; baseline adapters do not promise cross-process or crash-durable publication.
 
-## Limitations
-
-This is a synchronization engine showcase, not a cloud service or file manager. It plans and applies snapshots in memory; real transport transactions, retries, tombstones, multi-peer causality, text merging, rename inference and authenticated protocols are outside scope. Revisions do not establish cross-branch authority. Platform baseline adapters promise in-process publication, not cross-process transactions. JSON is a bounded local replay format.
-
-## External library
-
-Added kotlinx.serialization JSON **1.11.0**, Apache-2.0, with the compiler plugin at the existing Kotlin version. No external synchronization implementation was copied. Existing Compose/AndroidX dependencies remain in use.
+Physical iOS deployment and compatibility with the configured minimum OS remain unverified; the recorded simulator run used iOS 26.5. JSON is a bounded local replay format, not a streaming transport protocol. See [serialization](docs/serialization.md) and [evaluation limitations](docs/evaluation.md).
