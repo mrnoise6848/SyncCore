@@ -32,7 +32,7 @@ class EngineEvaluationTest {
             verify(Scenario("Grid","Exhaustive snapshots",input),p)
         }
         assertEquals(395,runs)
-        val directory = File(System.getProperty("synccore.reportDir"))
+        val directory = File(requireNotNull(System.getProperty("synccore.reportDir")))
         directory.mkdirs()
         File(directory,"scenario-evaluation.md").writeText("""
             # Deterministic scenario evaluation

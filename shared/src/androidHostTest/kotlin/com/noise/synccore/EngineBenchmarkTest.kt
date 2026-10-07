@@ -17,7 +17,7 @@ class EngineBenchmarkTest {
         }
         val environment = "Runtime: ${System.getProperty("java.vm.name")} ${System.getProperty("java.version")} (${System.getProperty("java.vendor")}). OS: ${System.getProperty("os.name")} ${System.getProperty("os.version")} ${System.getProperty("os.arch")}. Available processors: ${runtime.availableProcessors()}."
         val markdown = report.toMarkdown(environment) + "\nJVM used heap sampled before suite: $before bytes; after suite: $after bytes. These are not peak-memory or allocation metrics, and no forced GC was used.\n"
-        val directory = File(System.getProperty("synccore.reportDir"))
+        val directory = File(requireNotNull(System.getProperty("synccore.reportDir")))
         directory.mkdirs()
         File(directory,"benchmark-report.md").writeText(markdown)
         File(directory,"benchmark-samples.csv").writeText(buildString {

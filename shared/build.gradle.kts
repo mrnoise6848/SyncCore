@@ -42,8 +42,9 @@ kotlin {
     }
     
     sourceSets {
-        androidDeviceTest.dependencies {
+        getByName("androidDeviceTest").dependencies {
             implementation(libs.androidx.testExt.junit)
+            implementation(libs.androidx.test.runner)
         }
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
@@ -73,4 +74,18 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
     systemProperty("synccore.reportDir", rootProject.layout.projectDirectory.dir("docs").asFile.absolutePath)
+}
+
+// AGP registers host test tasks after project evaluation.
+afterEvaluate {
+    val androidHostTests = tasks.named<Test>("testAndroidHostTest")
+    androidHostTests.configure { exclude("**/EngineBenchmarkTest.class") }
+    tasks.register<Test>("benchmarkSyncCore") {
+        group = "verification"
+        description = "Measure the shared synchronization engine and write actual benchmark reports."
+        dependsOn(androidHostTests.map { it.testClassesDirs })
+        testClassesDirs = androidHostTests.get().testClassesDirs
+        classpath = androidHostTests.get().classpath
+        filter.includeTestsMatching("com.noise.synccore.EngineBenchmarkTest")
+    }
 }

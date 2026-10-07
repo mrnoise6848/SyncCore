@@ -159,6 +159,7 @@ class SyncEngineTest {
         val entitiesView = snapshot.entities.values.toMutableList()
         entitiesView.clear()
         assertEquals("Meeting",a.fields["title"])
+        assertEquals(mapOf("title" to "Meeting").entries,a.fields.entries)
         assertEquals(a,snapshot[a.id])
     }
     @Test fun invalidDomainValuesAreRejected() {

@@ -11,7 +11,11 @@ internal class SnapshotMap<K, V>(source: Map<K, V>) : Map<K, V> {
     override val keys: Set<K> get() = backing.keys.toSet()
     override val values: Collection<V> get() = backing.values.toList()
     override val entries: Set<Map.Entry<K, V>> get() = backing.map { Entry(it.key,it.value) }.toSet()
-    private data class Entry<K, V>(override val key: K, override val value: V) : Map.Entry<K, V>
+    private class Entry<K, V>(override val key: K, override val value: V) : Map.Entry<K, V> {
+        override fun equals(other: Any?): Boolean = other is Map.Entry<*, *> && key == other.key && value == other.value
+        override fun hashCode(): Int = (key?.hashCode() ?: 0) xor (value?.hashCode() ?: 0)
+        override fun toString(): String = "$key=$value"
+    }
     override fun equals(other: Any?): Boolean = backing == other
     override fun hashCode(): Int = backing.hashCode()
     override fun toString(): String = backing.toString()
